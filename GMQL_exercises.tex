@@ -101,4 +101,21 @@ MATERIALIZE ClosestK4me1FartherThan10k INTO Result;
 This job runned in about 2 minutes (113 sec), I obtained three sample, without duplicate.
 The join is expliciting asking for one element, father than 10000 from the anchor in ``ActiveInPromoter'' from the ``K4me1EtOH''.
 
+\section{Exercise 2}
+
+\begin{lstlisting}
+Sample = SELECT(antibody_target == 'JUN' AND (treatment == 'IFNa30' OR treatment == 'None')) HG19_ENCODE_NARROW;
+Promoters  = SELECT(annotation_type == 'promoter') HG19_BED_ANNOTATION;
+
+SampleOverlapping = COVER(2, ANY) Sample;
+SampleIntersect = MAP() Sample SampleOverlapping;
+
+SampleAndPromotersUnion = UNION() Promoters SampleIntersect;
+SampleAndPromotersOverlapping = COVER(2, ANY) SampleAndPromotersUnion;
+SampleAndPromoters = MAP() Promoters SampleAndPromotersOverlapping;
+
+MATERIALIZE SampleAndPromoters INTO Result;
+\end{lstlisting}
+
+
 \end{document}
