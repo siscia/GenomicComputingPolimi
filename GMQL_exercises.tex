@@ -55,7 +55,7 @@
 
 %%% The "real" document content comes below...
 
-\title{Genom Browser}
+\title{GMQL}
 \author{Simone Mosciatti}
 %\date{} % Activate to display a given date or no date (if empty),
          % otherwise the current date is printed 
@@ -65,34 +65,40 @@
 
 \section{Exercise 1}
 
-\subsection{A}
+\begin{lstlisting}
+# Among the different epigenetic signals, H3K27ac and H3K27me3 are generally 
+# associated with active and repressed chromatin regions, respectively. 
+# Considering H3K4me1 in cell line A549 and the aforementioned signals 
+# (H3K27ac and H3K27me3) in broadPeak format, under ethanol treatment (EtOH)
 
-In the region there are two genes, I can see the beginning of SUPT3H in the negative strand and the beginning of RUNX2 on the positive strand.
+K4me1EtOH  = SELECT(cell == 'A549' AND treatment == 'EtOH_0.02pct' AND antibody == 'H3K4me1' ) HG19_ENCODE_BROAD;
+K27acEtOH  = SELECT(cell == 'A549' AND treatment == 'EtOH_0.02pct' AND antibody == 'H3K27ac' ) HG19_ENCODE_BROAD;
+K27me3EtOH = SELECT(cell == 'A549' AND treatment == 'EtOH_0.02pct' AND antibody == 'H3K27me3') HG19_ENCODE_BROAD;
 
-\subsection{B}
+Promoters  = SELECT(annotation_type == 'promoter') HG19_BED_ANNOTATION;
 
-It is possible to notice a peak of the GC Percent just at the very beginning of SUPT3H exactly in a CpG island.
+ActiveUnion = UNION() K4me1EtOH K27acEtOH;
+ActiveOverlapping = COVER(2, ANY) ActiveUnion;
+Active = MAP() ActiveUnion ActiveOverlapping;
 
-Similarly we can see a peak of the GC Percent at the beginning of the third intron of RUNX2, which is, as well, inside a CpG island.
+RepressedUnion = UNION() K4me1EtOH K27me3EtOH;
+RepressedOverlapping =  COVER(2, ANY) RepressedUnion;
+Repressed = MAP() RepressedUnion RepressedOverlapping;
 
-It is curius to notice that at the very beginning of RUNX2, roughly 100kb upstream the peak of the GC is way mildier.
+PoisedUnion = UNION() Repressed Active;
+PoisedOverlapping = COVER(2, ANY) PoisedUnion;
+Poised = MAP() PoisedUnion PoisedOverlapping;
 
-The first CpG island following the positive strand, the one associated with SUPT3H is in position: chr6:45345186-45346261, with chromosome band: 6p21.1 and genomic size of 1076.
+ActiveInPromotersUnion = UNION() Active Promoters;
+ActiveInPromotersOverlapping = COVER(2, ANY) ActiveInPromotersUnion;
+ActiveInPromoters = MAP() ActiveInPromotersUnion ActiveInPromotersOverlapping;
 
-\section{Exercise 2}
+ClosestK4me1FartherThan10k = JOIN(DGE(10000), MD(1); output: cat) ActiveInPromoters K4me1EtOH;
 
-\subsection{A}
+MATERIALIZE ClosestK4me1FartherThan10k INTO Result;
+\end{lstlisting}
 
-Definitely no, the first three reads maps in two different regions, the fourth and the fifth maps in three different region while the last map in as much as four different regions.
-
-\subsection{B / C}
-
-There is an almost perfect match of all the reads with the gene 17 in this coordinates: chr17:41,256,928-41,258,548
-
-The coordinates correspond to the fourth intron of gene BRCA1.
-
-\subsection{C}
-
-This reads, most likely, come from gene 17.
+This job runned in about 2 minutes (113 sec), I obtained three sample, without duplicate.
+The join is expliciting asking for one element, father than 10000 from the anchor in ``ActiveInPromoter'' from the ``K4me1EtOH''.
 
 \end{document}
