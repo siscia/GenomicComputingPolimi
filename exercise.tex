@@ -357,5 +357,52 @@ $ samtools view -h -F 4 -c -o gata1.sam gata1.bam
 $
 \end{lstlisting}
 
+\section{Part 5: Peak Calling}
+
+Here we are assuming that the file ``input.fastq'' contained the control experiment.
+
+The two command used are:
+
+\begin{lstlisting}
+$ macs14 -t gata1.bam -c input.bam --name gata1_peakcalling \
+    --mfold=10,30 --format=BAM --pvalue=1e-8 -s 41 -g mm  --diag
+$ macs14 -t tal1.bam -c input.bam --name tal1_peakcalling \
+    --mfold=10,30 --format=BAM --pvalue=1e-8 -s 41 -g mm  --diag
+\end{lstlisting}
+
+The results are:
+
+\begin{lstlisting}
+$ wc -l gata1_peakcalling_peaks.bed \
+    gata1_peakcalling_negative_peaks.xls \
+    tal1_peakcalling_peaks.bed \
+    tal1_peakcalling_negative_peaks.xls
+    
+  2660 gata1_peakcalling_peaks.bed
+     9 gata1_peakcalling_negative_peaks.xls
+  1438 tal1_peakcalling_peaks.bed
+    12 tal1_peakcalling_negative_peaks.xls
+  4119 total
+\end{lstlisting}
+
+So we have called 2660 peaks for the gata1 and 8 of them are negative, and 1438 for the tal1 and 11 of them are negative.
+
+(The negative files contains a line of header.)
+\begin{lstlisting}
+$ cat gata1_peakcalling_diag.xls
+FC range	# of Peaks	cover by sampling 90%	80%	70%	
+0-20		968				53.20	42.25	33.06	
+20-40		1256				90.76	84.32	77.15	
+40-60		308				100.00	100.00	100.00	
+$
+$ cat tal1_peakcalling_diag.xls
+FC range	# of Peaks	cover by sampling 90%	80%	70%	
+0-20		244				77.05	62.70	57.79		
+20-40		752				93.48	85.51	79.92		
+40-60		296				100.00	100.00	99.66
+\end{lstlisting}
+
+The saturation level at the enrichment between 20 and 40 with 90\% of the fields are 90.76 and 93.48, respectively for gata1 and tal1.
+
 
 \end{document}
