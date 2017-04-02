@@ -404,5 +404,67 @@ FC range	# of Peaks	cover by sampling 90%	80%	70%
 
 The saturation level at the enrichment between 20 and 40 with 90\% of the fields are 90.76 and 93.48, respectively for gata1 and tal1.
 
+\section{Part 6: Shared Peaks}
 
+\begin{lstlisting}
+$ intersectBed -a tal1_peakcalling_peaks.bed \
+    -b gata1_peakcalling_peaks.bed -u > intersect_peaks.bed
+$
+$ wc -l intersect_peaks.bed 
+1148 intersect_peaks.bed
+\end{lstlisting}
+
+I interpreted the request of the point 6.2 as to find the peaks in gata1 that are not in tal1.
+
+\begin{lstlisting}
+$ intersectBed -b tal1_peakcalling_peaks.bed \
+    -a gata1_peakcalling_peaks.bed -v > peaks_only_in_gata1.bed
+$ 
+$ wc -l peaks_only_in_gata1.bed 
+1514 peaks_only_in_gata1.bed
+\end{lstlisting}
+
+\section{Part 7}
+
+Here we create the bw files.
+
+\begin{lstlisting}
+$ bamToBed -i gata1.bam | \
+    slopBed -i stdin -g chromsizes.tab -s -r 160 -l 0  | \
+    genomeCoverageBed -i stdin -g chromsizes.tab -bg > tmp.wig; \
+    wigToBigWig tmp.wig chromsizes.tab gata1.bw; \
+    rm tmp.wig
+$ bamToBed -i tal1.bam | \
+    slopBed -i stdin -g chromsizes.tab -s -r 160 -l 0  | \
+    genomeCoverageBed -i stdin -g chromsizes.tab -bg > tmp.wig; \
+    wigToBigWig tmp.wig chromsizes.tab tal1.bw; \
+    rm tmp.wig
+$ bamToBed -i input.bam | \
+    slopBed -i stdin -g chromsizes.tab -s -r 160 -l 0  | \
+    genomeCoverageBed -i stdin -g chromsizes.tab -bg > tmp.wig; \
+    wigToBigWig tmp.wig chromsizes.tab input.bw; \
+    rm tmp.wig
+\end{lstlisting}
+
+\section{Part 8}
+
+\begin{lstlisting}
+$ cut -f 1-3 intersect_peaks.bed > intersect_GREAT.bed
+$ cut -f 1-3 peaks_only_in_gata1.bed > peak_only_in_gata1_GREAT.bed
+\end{lstlisting}
+
+The relative motif are:
+
+\begin{figure}[h]
+	\caption{Motif for peaks in common}
+	\includegraphics[width=\textwidth]{common}
+\end{figure}
+
+
+\begin{figure}[h]
+	\caption{Motif for peaks of only GATA1}
+	\includegraphics[width=\textwidth]{only_gata1}
+\end{figure}
 \end{document}
+
+The tow figures have a comparable number of genes father than 5 kbases, however GATA1 has sensible more genes very close to the TSS.
